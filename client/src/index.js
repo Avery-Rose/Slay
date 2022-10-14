@@ -76,56 +76,11 @@ const loadEvents = () => {
 };
 
 const init = () => {
-  initFirebase();
   loadCommands();
   loadEvents();
   console.log('Logging in...');
   client.login(process.env.TOKEN);
 };
 
-const main = () => {
-  printDivider();
-  console.log(chalk.magenta('Process Info:'));
-  console.log(`\u2022 Hostname: ${chalk.green(require('os').hostname())}`);
-  console.log(`\u2022 Node Version: ${chalk.green(process.version)}`);
-  console.log(`\u2022 Process ID: ${chalk.green(process.pid)}`);
-  console.log(`\u2022 Platform: ${chalk.green(process.platform)}`);
-  console.log(`\u2022 Architecture: ${chalk.green(process.arch)}`);
-  console.log(`\u2022 CPU Cores: ${chalk.green(require('os').cpus().length)}`);
-  console.log(
-    `\u2022 CPU Model: ${chalk.green(require('os').cpus()[0].model)}`
-  );
-  printDivider();
-  const questions = [
-    {
-      type: 'confirm',
-      name: 'deploy',
-      message: 'Do you want to deploy commands?',
-      default: false,
-    },
-    {
-      type: 'confirm',
-      name: 'login',
-      message: 'Continue to login?',
-      default: true,
-    },
-  ];
-  inquirer.prompt(questions).then(async (answers) => {
-    printDivider();
-    if (answers.deploy) {
-      console.log(chalk.green('Deploying commands...'));
-      await deploy();
-      printDivider();
-    }
-    if (answers.login) {
-      init();
-    }
-  });
-};
-
-// production mode
-if (process.env.NODE_ENV === 'production') {
-  init();
-} else {
-  main();
-}
+initFirebase();
+init();

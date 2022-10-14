@@ -3,32 +3,27 @@ const { clientId, guildId } = require('./config.json');
 const chalk = require('chalk');
 require('dotenv').config();
 
-const deploy = async (clearsConsole) => {
+const fs = require('fs');
+const path = require('path');
+
+const deploy = async (guildId, clearsConsole) => {
   const clear = () => (clearsConsole ? console.clear() : null);
   clear();
 
-  const commands = [
-    new SlashCommandBuilder()
-      .setName('ping')
-      .setDescription('Replies with pong!'),
-  ].map((command) => command.toJSON());
+  const commands = [];
+  const commandFiles = fs
+    .readdirSync(path.join(__dirname, 'commands'))
+    .filter((file) => file.endsWith('.js'));
+
+  for (const file of commandFiles) {
+    const command = require(`./commands/${file}`);
+    commands.push(command.data.toJSON());
+  }
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
-  console.log('Registering commands...');
-  commands.forEach((command, i) => {
-    console.log(`${i + 1}. ${chalk.green(command.name)}`);
-  });
-
   await rest
     .put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
-    .then((data) => {
-      clear();
-      console.log(`Registered ${chalk.green(data.length)} command(s).`);
-      data.forEach((command, i) => {
-        console.log(`${i + 1}. ${chalk.green(command.name)}`);
-      });
-    })
     .catch((err) => {
       clear();
       console.log(chalk.red('Error while registering commands'));
