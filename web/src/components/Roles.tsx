@@ -1,8 +1,29 @@
 import React, { useEffect } from 'react';
 import { app } from '../firebase';
 import { getFirestore, collection, getDocs } from 'firebase/firestore/lite';
+import { motion } from "framer-motion"
 
 const db = getFirestore(app);
+
+const containerVariant = {
+  hidden: { opacity: 1, scale: 0 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      delayChildren: 0.1,
+      staggerChildren: 0.1
+    }
+  }
+}
+
+const itemVariant = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1
+  }
+}
 
 const base10ToHex = (num: number) => {
   const hex = num.toString(16);
@@ -12,14 +33,24 @@ const base10ToHex = (num: number) => {
 
 const Dot = ({ color }: { color: string }) => {
   return (
-    <div
+    <motion.div
+      whileHover={{ scale: 1.1}}
+      whileTap={{
+        scale: 0.9,
+      }}
       style={{
+        cursor: 'pointer',
         width: '20px',
         height: '20px',
         borderRadius: '50%',
         backgroundColor: color,
       }}
-    ></div>
+      onClick={() => {
+        // Copy to clipboard
+        navigator.clipboard.writeText(color);
+        console.log('Copied color to clipboard.');
+      }}
+    />
   );
 };
 
@@ -29,8 +60,7 @@ const Roles = () => {
   const getRoles = async () => {
     const rolesCollection = collection(db, 'roles');
     const rolesSnapshot = await getDocs(rolesCollection);
-    const rolesList = rolesSnapshot.docs.map((doc) => doc.data());
-    return rolesList;
+    return rolesSnapshot.docs.map((doc) => doc.data());
   };
 
   const groupByGuild = roles.reduce((acc, role) => {
@@ -89,7 +119,10 @@ const Roles = () => {
               }}
             >
               <h2>{guild}</h2>
-              <ul
+              <motion.ul
+                variants={containerVariant}
+                initial="hidden"
+                animate="visible"
                 style={{
                   listStyle: 'none',
                   padding: '10px',
@@ -99,28 +132,28 @@ const Roles = () => {
                 }}
               >
                 {groupByGuild[guild].map((role) => {
+
                   return (
-                    <li
+                    <motion.li
                       key={role.id}
-                      style={{
-                        color: 'white',
-                        backgroundColor: '#292b2f',
-                        padding: '10px',
-                        margin: '10px',
-                        borderRadius: '5px',
-                        width: 'fit-content',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: '10px',
-                      }}
+                      className="role"
+                      variants={itemVariant}
                     >
                       <Dot color={base10ToHex(role.color)} />
-                      {role.name}
-                    </li>
+                      <motion.span
+                      whileTap={{y: 2}}
+                      style={{
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => {
+                        // Copy to clipboard
+                        navigator.clipboard.writeText(role.name);
+                        console.log('Copied role name to clipboard.');
+                      }}>{role.name}</motion.span>
+                    </motion.li>
                   );
                 })}
-              </ul>
+              </motion.ul>
             </div>
           );
         })}
