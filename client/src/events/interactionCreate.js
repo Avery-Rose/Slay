@@ -1,14 +1,15 @@
 const chalk = require('chalk');
 const fetch = require('node-fetch');
+const fs = require('fs');
 
 const getBreedsList = async () => {
   const response = await fetch('https://api.thecatapi.com/v1/breeds');
   const breeds = await response.json();
 
-  return breeds.map(breed => {
+  return breeds.map((breed) => {
     return {
       name: breed.name,
-      id: breed.id
+      id: breed.id,
     };
   });
 };
@@ -17,10 +18,10 @@ const getCategoriesList = async () => {
   const response = await fetch('https://api.thecatapi.com/v1/categories');
   const categories = await response.json();
 
-  return categories.map(category => {
+  return categories.map((category) => {
     return {
       name: category.name,
-      id: category.id.toString()
+      id: category.id.toString(),
     };
   });
 };
@@ -28,10 +29,8 @@ const getCategoriesList = async () => {
 module.exports = {
   name: 'interactionCreate',
   async execute(interaction) {
-
     // Auto complete
     if (interaction.isAutocomplete()) {
-
       const cmdName = interaction.commandName;
 
       if (cmdName === 'cat') {
@@ -46,9 +45,10 @@ module.exports = {
           choices = await getCategoriesList();
         }
 
-
-        let filtered = choices.filter(choice => {
-          return choice.name.toLowerCase().includes(focusedOption.value.toLowerCase());
+        let filtered = choices.filter((choice) => {
+          return choice.name
+            .toLowerCase()
+            .includes(focusedOption.value.toLowerCase());
         });
 
         // Limit the number of choices to 25
@@ -60,11 +60,10 @@ module.exports = {
         if (filtered.length === 0) return;
 
         await interaction.respond(
-          filtered.map(choice => ({name: choice.name, value: choice.id}))
+          filtered.map((choice) => ({ name: choice.name, value: choice.id }))
         );
       }
     }
-
     // if the interaction is a slash command
     if (interaction.isChatInputCommand()) {
       const client = interaction.client;
@@ -89,6 +88,25 @@ module.exports = {
           ephemeral: true,
         });
       }
+    }
+    // if the interaction is a context menu
+    if (interaction.isMessageContextMenuCommand()) {
+      const message = interaction.options.getMessage('message');
+      const reactionList = ['upvote', 'downvote'];
+      const guildId = '1006583002517745674';
+
+      for (const reaction of reactionList) {
+        const guild = interaction.client.guilds.cache.get(guildId);
+        const emoji = guild.emojis.cache.find(
+          (emoji) => emoji.name === reaction
+        );
+        await message.react(emoji);
+      }
+
+      await interaction.reply({
+        content: 'Reactions added! 😺',
+        ephemeral: true,
+      });
     }
   },
 };
